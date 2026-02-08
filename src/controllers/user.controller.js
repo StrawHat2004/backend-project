@@ -24,33 +24,39 @@ const registerUser = asyncHandler(async (req, res) => {
     }
 
     // Simulate user existence check
-   const existeduseer = User.findOne({
+   const existeduseer = await User.findOne({
         $or : [{email}, {username}]
     });
     if(existeduseer){
         throw new ApiError(409, "User already exists");
     }
 
-    const avtarLocalpath = req.files?.avtar[0]?.path;
-    const coverImageLocalpath = req.files?.coverImage[0]?.path;
+    const avatarLocalpath = req.files?.avatar[0]?.path;
+    // const coverImageLocalpath = req.files?.coverImage[0]?.path;
 
-    if(!avtarLocalpath){
+     let coverImageLocalpath;
+
+    if(req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0){
+        coverImageLocalpath = req.files.coverImage[0]?.path;
+    }
+
+    if(!avatarLocalpath){
         throw new ApiError(400, "Avatar is required");
     }
 
-    const avtarUrl = await uploadToCloudinary(avtarLocalpath);
+    const avatarUrl = await uploadToCloudinary(avatarLocalpath);
     const coverImageUrl = await uploadToCloudinary(coverImageLocalpath);
 
-    if(!avtarUrl){
+    if(!avatarUrl){
         throw new ApiError(500, "Failed to upload avatar");
     }
 
-    const newUser = await new User({
+    const newUser = await User.create({
         fullName,
         email,
         username: username.toLowerCase(),
         password,
-        avtar: avtarUrl,
+        avatar: avatarUrl,
         coverImage: coverImageUrl? coverImageUrl : null
     });
 
