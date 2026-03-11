@@ -28,5 +28,9 @@ import userRoutes from './routes/user.routes.js';
 
 //routes declaration
 app.use("/api/v1/users", userRoutes);
+app.use("/api/v1/tweets", tweetRoutes);
+app.use("/api/v1/likes", likeRoutes);
+app.use("/api/v1/comments", commentRoutes);
+app.use("/api/v1/playlists", playlistRoutes);
 
 export { app };
