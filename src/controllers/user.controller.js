@@ -168,8 +168,8 @@ const logoutUser = asyncHandler(async (req, res) => {
   await User.findByIdAndUpdate(
     req.User._id,
     {
-      $unset: { 
-        refreshToken: 1
+      $unset: {
+        refreshToken: 1,
       },
     },
     {
@@ -399,102 +399,107 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
       },
     },
     {
-        $addFields: {
-            subscribersCount: {
-                $size: "$subscribers"
+      $addFields: {
+        subscribersCount: {
+          $size: "$subscribers",
+        },
+        channelsSubscribedToCount: {
+          $size: "$subscribedTo",
+        },
+        isSubscribed: {
+          $cond: {
+            if: {
+              $in: [req.User?._id, "$subscribers.subscriber"],
             },
-            channelsSubscribedToCount: {
-                $size: "$subscribedTo"
-            },
-            isSubscribed:{
-                $cond: {
-                    if : {
-                        $in: [req.User?._id, "$subscribers.subscriber"]
-                    },
-                    then: true,
-                    else: false
-                }
-            }
-        }
+            then: true,
+            else: false,
+          },
+        },
+      },
     },
     {
-        $project: {
-            fullName: 1,
-            username: 1,
-            subscribersCount: 1,
-            channelsSubscribedToCount: 1,
-            isSubscribed: 1,
-            coverImage: 1,
-            email: 1
-        }
-    }
-    
+      $project: {
+        fullName: 1,
+        username: 1,
+        subscribersCount: 1,
+        channelsSubscribedToCount: 1,
+        isSubscribed: 1,
+        coverImage: 1,
+        email: 1,
+      },
+    },
   ]);
 
-  if(!channel?.length){
-    throw new ApiError(404, "channel does not exists")
+  if (!channel?.length) {
+    throw new ApiError(404, "channel does not exists");
   }
 
   return res
-  .status(200)
-  .json(
-    new ApiResponse(200, channel[0], "User Channel profile fetched successfully")
-  )
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        channel[0],
+        "User Channel profile fetched successfully"
+      )
+    );
 });
 
 const getUserWatchHistory = asyncHandler(async (req, res) => {
   //get user id from req.user
   //find watch history in database
-  //send watch history in response 
+  //send watch history in response
   const user = await User.aggregate([
     {
       $match: {
-        _id: new mongoose.Types.ObjectId(req.User._id)
+        _id: new mongoose.Types.ObjectId(req.User._id),
       },
-
-      },
-      {
-        $lookup: {
-          from: "videos",
-          localField: "watchHistory",
-          foreignField: "_id",
-          as: "watchHistoryVideos",
-          pipeline:[
-            {
-              $lookup: {
-                from: "users",
-                localField: "owner",
-                foreignField: "_id",
-                as: "ownerDetails",
-                pipeline:[
-                  {
-                    $project: {
-                      fullName: 1,
-                      username: 1,
-                      avatar: 1,
-                    }
+    },
+    {
+      $lookup: {
+        from: "videos",
+        localField: "watchHistory",
+        foreignField: "_id",
+        as: "watchHistoryVideos",
+        pipeline: [
+          {
+            $lookup: {
+              from: "users",
+              localField: "owner",
+              foreignField: "_id",
+              as: "ownerDetails",
+              pipeline: [
+                {
+                  $project: {
+                    fullName: 1,
+                    username: 1,
+                    avatar: 1,
                   },
-                  {
-                    $addFields: {
-                      owner:{
-                        $first: "$ownerDetails"
-                      }
-                    }
-                  }
-                ]
-              }
-            }
-          ]
-        }
-      }
-    
-  ])
+                },
+              ],
+            },
+          },
+          {
+            $addFields: {
+              owner: {
+                $first: "$ownerDetails",
+              },
+            },
+          },
+        ],
+      },
+    },
+  ]);
 
-  res.status(200)
-     .json(
-        new ApiResponse(200, user[0].watchHistoryVideos, "Watch history fetched successfully")
-      );  
-
+  res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        user[0].watchHistoryVideos,
+        "Watch history fetched successfully"
+      )
+    );
 });
 
 export {
@@ -508,5 +513,5 @@ export {
   updateCoverImage,
   getUserChannelProfile,
   getUserWatchHistory,
-  registerUser
+  registerUser,
 };
