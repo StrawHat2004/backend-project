@@ -32,5 +32,7 @@ app.use("/api/v1/tweets", tweetRoutes);
 app.use("/api/v1/likes", likeRoutes);
 app.use("/api/v1/comments", commentRoutes);
 app.use("/api/v1/playlists", playlistRoutes);
+app.use("/api/v1/videos", videoRoutes);
+app.use("/api/v1/subscriptions", subscriptionRoutes);
 
 export { app };
