@@ -188,7 +188,8 @@ const getPlaylistById = asyncHandler(async (req, res) => {
 
 const addVideoToPlaylist = asyncHandler(async (req, res) => {
   const { playlistId, videoId } = req.params;
-  // TODO: add video to playlist
+  const userId = req.User._id;
+  //add video to playlist
     if (
     !mongoose.Types.ObjectId.isValid(playlistId) ||
     !mongoose.Types.ObjectId.isValid(videoId)
@@ -198,6 +199,10 @@ const addVideoToPlaylist = asyncHandler(async (req, res) => {
   const playlist = await Playlist.findById(playlistId);
   if (!playlist) {
     throw new ApiError(404, "Playlist not found");
+  }
+
+  if (playlist.owner.toString() !== userId.toString()) {
+    throw new ApiError(403, "You are not the owner of this playlist");
   }
   playlist.videos.push(videoId);
   await playlist.save();
@@ -237,6 +242,10 @@ const deletePlaylist = asyncHandler(async (req, res) => {
   if (!playlist) {
     throw new ApiError(404, "Playlist not found");
   }
+    if (playlist.owner.toString() !== req.User._id.toString()) {
+    throw new ApiError(403, "You are not the owner of this playlist");
+  }
+
   await playlist.remove();
   return res
     .status(200)
@@ -255,7 +264,10 @@ const updatePlaylist = asyncHandler(async (req, res) => {
   if (!playlist) {
     throw new ApiError(404, "Playlist not found");
   }
-  // TODO: Implement playlist update logic
+  if (playlist.owner.toString() !== req.User._id.toString()) {
+    throw new ApiError(403, "You are not the owner of this playlist");
+  }
+  // Implement playlist update logic
   playlist.name = name ||playlist.name;
   playlist.description = description || playlist.description;
   await playlist.save();
